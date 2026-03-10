@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree -L 3 -I 'node_modules' \"/Users/G's m/taskflow\" 2>/dev/null || find \"/Users/G's m/taskflow\" -not -path \"*/node_modules/*\" -type f -o -type d | grep -v node_modules | sort)",
+      "Bash(lsof -ti :5000)",
+      "Bash(lsof -i :5000)",
+      "Bash(pg_isready -U technomix)",
+      "Bash(export PATH=\"/opt/homebrew/bin:$PATH\" && pg_isready -U technomix && echo \"PostgreSQL is running\")",
+      "Bash(export PATH=\"/opt/homebrew/bin:$PATH\" && psql -U technomix -d postgres -c \"SELECT 1 FROM pg_database WHERE datname='taskflow';\" | grep -q 1 && echo \"Database already exists\" || psql -U technomix -d postgres -c \"CREATE DATABASE taskflow;\" && echo \"Database created\")",
+      "Bash(curl -s -X POST http://localhost:5001/api/auth/register \\\\\n  -H \"Content-Type: application/json\" \\\\\n  -d '{\"name\":\"Test User\",\"email\":\"test@taskflow.dev\",\"password\":\"secret123\"}' | python3 -m json.tool 2>/dev/null || echo \"Register done\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbW1rbDcydjgwMDAwYjRsbndqMm1mc3lyIiwiaWF0IjoxNzczMTQ1NzQ3LCJleHAiOjE3NzM3NTA1NDd9.PefJn0urVOL76JYipwQb3Ssw_lV-axa4D8OUZRtZgiA\"\n\ncurl -s -X POST http://localhost:5001/api/tasks \\\\\n  -H \"Content-Type: application/json\" \\\\\n  -H \"Authorization: Bearer $TOKEN\" \\\\\n  -d '{\"title\":\"Launch Q1 campaign\",\"description\":\"Prepare all assets\",\"status\":\"IN_PROGRESS\",\"dueDate\":\"2026-03-15\"}' \\\\\n  | python3 -m json.tool 2>/dev/null)",
+      "Bash(cd \"/Users/G's m/taskflow/server\" && npm install multer @anthropic-ai/sdk 2>&1 | tail -5)"
+    ]
+  }
+}

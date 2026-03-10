@@ -1,0 +1,119 @@
+// Prisma Schema — TaskFlow
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+model User {
+  id          String      @id @default(cuid())
+  name        String
+  email       String      @unique
+  password    String
+  totalCoins  Int         @default(0)
+  createdAt   DateTime    @default(now())
+
+  tasks         Task[]
+  userSkills    UserSkill[]
+  focusSessions FocusSession[]
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  notes        String?
+  status       TaskStatus @default(TODO)
+  dueDate      DateTime?
+  rewardCoins  Int        @default(10)
+  coinsAwarded Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtasks    Subtask[]
+  attachments Attachment[]
+  taskSkills  TaskSkill[]
+  focusSessions FocusSession[]
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  title     String
+  completed Boolean  @default(false)
+  taskId    String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  taskId    String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String
+  icon      String
+  color     String   @default("#3b82f6")
+  createdAt DateTime @default(now())
+
+  taskSkills TaskSkill[]
+  userSkills UserSkill[]
+}
+
+model UserSkill {
+  id      String @id @default(cuid())
+  userId  String
+  skillId String
+  xp      Int    @default(0)
+  level   Int    @default(1)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+}
+
+model TaskSkill {
+  id      String @id @default(cuid())
+  taskId  String
+  skillId String
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, skillId])
+}
+
+model FocusSession {
+  id         String   @id @default(cuid())
+  userId     String
+  taskId     String
+  duration   Int      @default(0)   // seconds actually focused
+  note       String?                // post-session accomplishment note
+  completed  Boolean  @default(false)
+  bonusCoins Int      @default(0)   // streak milestone bonus awarded
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}

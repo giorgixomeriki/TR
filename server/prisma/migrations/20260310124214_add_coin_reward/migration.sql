@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Task" ADD COLUMN     "coinsAwarded" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "rewardCoins" INTEGER NOT NULL DEFAULT 10;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "totalCoins" INTEGER NOT NULL DEFAULT 0;
