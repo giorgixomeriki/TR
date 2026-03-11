@@ -4,15 +4,20 @@ const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
+    console.log(`[register] raw body — name: "${name}", email: "${email}"`);
+
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required.' });
     }
+
+    // Normalise before validation so whitespace/case can't cause false negatives
+    const normalisedEmail = email.trim().toLowerCase();
 
     if (name.trim().length < 2) {
       return res.status(400).json({ message: 'Name must be at least 2 characters.' });
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalisedEmail)) {
       return res.status(400).json({ message: 'Please provide a valid email address.' });
     }
 
@@ -20,7 +25,7 @@ const register = async (req, res, next) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters.' });
     }
 
-    const data = await authService.register({ name: name.trim(), email: email.toLowerCase(), password });
+    const data = await authService.register({ name: name.trim(), email: normalisedEmail, password });
     res.status(201).json(data);
   } catch (error) {
     next(error);

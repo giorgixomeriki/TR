@@ -3,23 +3,32 @@ const prisma = require('../lib/prisma');
 const { generateToken } = require('../utils/jwt');
 
 const register = async ({ name, email, password }) => {
-  const existingUser = await prisma.user.findUnique({ where: { email } });
+  // Normalise: strip whitespace and force lowercase so "User@Test.com " matches "user@test.com"
+  const normalisedEmail = email.trim().toLowerCase();
 
-  if (existingUser) {
-    const error = new Error('An account with this email already exists.');
-    error.statusCode = 409;
-    throw error;
-  }
+  console.log(`[register] attempt — email: "${normalisedEmail}"`);
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword },
-    select: { id: true, name: true, email: true, createdAt: true },
-  });
+  try {
+    const user = await prisma.user.create({
+      data: { name: name.trim(), email: normalisedEmail, password: hashedPassword },
+      select: { id: true, name: true, email: true, createdAt: true },
+    });
 
-  const token = generateToken(user.id);
-  return { user, token };
+    console.log(`[register] success — userId: ${user.id}`);
+    const token = generateToken(user.id);
+    return { user, token };
+  } catch (err) {
+    // P2002 = Prisma unique constraint violation
+    if (err.code === 'P2002') {
+      console.log(`[register] conflict — "${normalisedEmail}" already exists`);
+      const conflict = new Error('An account with this email already exists.');
+      conflict.statusCode = 409;
+      throw conflict;
+    }
+    throw err;
+  }
 };
 
 const login = async ({ email, password }) => {
