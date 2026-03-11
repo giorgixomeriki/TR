@@ -34,3 +34,7 @@ Thumbs.db
 # Prisma
 server/prisma/dev.db
 server/prisma/*.db
+
+# Uploaded files (Railway disk is ephemeral — use object storage in production)
+server/uploads/*
+!server/uploads/.gitkeep

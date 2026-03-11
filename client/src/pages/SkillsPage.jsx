@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import AvatarScene from '../components/AvatarScene';
 import SkillCard from '../components/SkillCard';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -56,16 +55,14 @@ export default function SkillsPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '100px 0' }}>
         <LoadingSpinner size={44} />
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
-
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <main style={{ flex: 1, maxWidth: 1400, width: '100%', margin: '0 auto', padding: '32px 24px 64px' }}>
 
         {/* ── Page header ── */}

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/Navbar';
 import KanbanBoard from '../components/KanbanBoard';
 import TaskModal from '../components/TaskModal';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -162,9 +161,7 @@ export default function Dashboard() {
   const firstName                = user?.name?.split(' ')[0] || 'there';
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
-      <Navbar />
-
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <main style={{ flex: 1, padding: '28px 24px 48px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
 
         {/* ── Page header ── */}

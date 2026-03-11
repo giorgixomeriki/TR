@@ -2,21 +2,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTask, updateTask }            from '../services/taskService';
 import { startFocusSession, getFocusStats } from '../services/focusService';
-import SubtaskList           from './SubtaskList';
-import FocusSessionSummary   from './FocusSessionSummary';
-import AvatarTrainingPanel   from './AvatarTrainingPanel';
-import LoadingSpinner        from './LoadingSpinner';
+import SubtaskList          from './SubtaskList';
+import FocusSessionSummary  from './FocusSessionSummary';
+import AvatarTrainingPanel  from './AvatarTrainingPanel';
+import CircularTimerDial    from './CircularTimerDial';
+import LoadingSpinner       from './LoadingSpinner';
 
 /* ── Constants ────────────────────────────────────────── */
 const WORK_SECS  = 25 * 60;
 const BREAK_SECS =  5 * 60;
-const CIRC       = 2 * Math.PI * 80; // r = 80
-
-/* ── Helpers ──────────────────────────────────────────── */
-function fmtTime(s) {
-  const m = Math.floor(s / 60);
-  return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-}
 
 /* ── Ambient orb ──────────────────────────────────────── */
 function Orb({ top, right, bottom, left, color, size = 500 }) {
@@ -214,9 +208,7 @@ export default function FocusArenaLayout() {
   };
 
   /* ── Derived ── */
-  const progress   = timeLeft / totalSecs;
-  const dashOffset = CIRC * (1 - progress);
-  const started    = timeLeft < totalSecs;
+  const started = timeLeft < totalSecs;
 
   const ringColor = (() => {
     if (phase === 'break')                        return 'var(--col-done)';
@@ -540,88 +532,17 @@ export default function FocusArenaLayout() {
             })}
           </div>
 
-          {/* SVG ring timer */}
-          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="220" height="220" viewBox="0 0 220 220">
-              {/* Track */}
-              <circle cx="110" cy="110" r="80" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="7" />
-
-              {/* Outer ring (arena style) */}
-              <circle cx="110" cy="110" r="95" fill="none"
-                stroke={running ? ringColor : 'rgba(255,255,255,0.03)'}
-                strokeWidth="1"
-                strokeDasharray="4 8"
-                style={{ transition: 'stroke 0.5s ease', opacity: 0.5 }}
-              />
-
-              {/* Glow */}
-              {running && (
-                <circle
-                  cx="110" cy="110" r="80"
-                  fill="none"
-                  stroke={ringColor}
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray={CIRC}
-                  strokeDashoffset={dashOffset}
-                  opacity="0.2"
-                  style={{ filter: 'blur(8px)', transition: 'stroke-dashoffset 1s linear, stroke 0.5s ease' }}
-                  transform="rotate(-90 110 110)"
-                />
-              )}
-
-              {/* Progress arc */}
-              <circle
-                cx="110" cy="110" r="80"
-                fill="none"
-                stroke={ringColor}
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray={CIRC}
-                strokeDashoffset={dashOffset}
-                transform="rotate(-90 110 110)"
-                style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.5s ease' }}
-              />
-            </svg>
-
-            {/* Center display */}
-            <div
-              style={{
-                position:      'absolute',
-                display:       'flex',
-                flexDirection: 'column',
-                alignItems:    'center',
-                gap:           4,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily:         '"SF Mono","Fira Code","Cascadia Code",ui-monospace,monospace',
-                  fontSize:           '2.6rem',
-                  fontWeight:         700,
-                  color:              running ? '#fff' : 'rgba(255,255,255,0.6)',
-                  letterSpacing:      '-0.04em',
-                  lineHeight:         1,
-                  fontVariantNumeric: 'tabular-nums',
-                  transition:         'color 0.3s ease',
-                }}
-              >
-                {fmtTime(timeLeft)}
-              </span>
-              <span
-                style={{
-                  fontSize:      '0.6rem',
-                  fontWeight:    700,
-                  color:         ringColor,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  opacity:       0.85,
-                }}
-              >
-                {timerLabel}
-              </span>
-            </div>
-          </div>
+          {/* Circular timer dial */}
+          <CircularTimerDial
+            timeLeft={timeLeft}
+            maxTime={totalSecs}
+            running={running}
+            ringColor={ringColor}
+            onTimeChange={setTimeLeft}
+            size={220}
+            label={timerLabel}
+            arenaStyle={true}
+          />
 
           {/* Controls */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

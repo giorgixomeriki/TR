@@ -2,21 +2,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTask, updateTask }       from '../services/taskService';
 import { startFocusSession, getFocusStats } from '../services/focusService';
-import SubtaskList       from './SubtaskList';
-import FocusSessionModal from './FocusSessionModal';
-import LoadingSpinner    from './LoadingSpinner';
+import SubtaskList        from './SubtaskList';
+import FocusSessionModal  from './FocusSessionModal';
+import CircularTimerDial  from './CircularTimerDial';
+import LoadingSpinner     from './LoadingSpinner';
 
 /* ── Constants ────────────────────────────────────────── */
 const WORK_SECS  = 25 * 60;
 const BREAK_SECS =  5 * 60;
-const CIRC       = 2 * Math.PI * 90; // r = 90
 
 /* ── Helpers ──────────────────────────────────────────── */
-function fmtTime(s) {
-  const m = Math.floor(s / 60);
-  return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-}
-
 function fmtFocusTime(mins) {
   if (mins === 0) return '0m';
   if (mins < 60)  return `${mins}m`;
@@ -208,9 +203,7 @@ export default function FocusModeLayout() {
   };
 
   /* ── Derived ── */
-  const progress   = timeLeft / totalSecs;
-  const dashOffset = CIRC * (1 - progress);
-  const started    = timeLeft < totalSecs;
+  const started = timeLeft < totalSecs;
 
   const ringColor = (() => {
     if (phase === 'break')              return 'var(--col-done)';
@@ -572,78 +565,16 @@ export default function FocusModeLayout() {
             })}
           </div>
 
-          {/* SVG ring timer */}
-          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="240" height="240" viewBox="0 0 240 240">
-              {/* Track */}
-              <circle cx="120" cy="120" r="90" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-              {/* Glow (blurred) */}
-              {running && (
-                <circle
-                  cx="120" cy="120" r="90"
-                  fill="none"
-                  stroke={ringColor}
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray={CIRC}
-                  strokeDashoffset={dashOffset}
-                  opacity="0.25"
-                  style={{ filter: 'blur(8px)', transition: 'stroke-dashoffset 1s linear, stroke 0.5s ease' }}
-                  transform="rotate(-90 120 120)"
-                />
-              )}
-              {/* Progress arc */}
-              <circle
-                cx="120" cy="120" r="90"
-                fill="none"
-                stroke={ringColor}
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={CIRC}
-                strokeDashoffset={dashOffset}
-                transform="rotate(-90 120 120)"
-                style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.5s ease' }}
-              />
-            </svg>
-
-            {/* Center display */}
-            <div
-              style={{
-                position:      'absolute',
-                display:       'flex',
-                flexDirection: 'column',
-                alignItems:    'center',
-                gap:           4,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily:         '"SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace',
-                  fontSize:           '2.8rem',
-                  fontWeight:         700,
-                  color:              running ? '#fff' : 'rgba(255,255,255,0.65)',
-                  letterSpacing:      '-0.04em',
-                  lineHeight:         1,
-                  transition:         'color 0.3s ease',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {fmtTime(timeLeft)}
-              </span>
-              <span
-                style={{
-                  fontSize:      '0.62rem',
-                  fontWeight:    700,
-                  color:         ringColor,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  opacity:       0.85,
-                }}
-              >
-                {timerLabel}
-              </span>
-            </div>
-          </div>
+          {/* Circular timer dial */}
+          <CircularTimerDial
+            timeLeft={timeLeft}
+            maxTime={totalSecs}
+            running={running}
+            ringColor={ringColor}
+            onTimeChange={setTimeLeft}
+            size={240}
+            label={timerLabel}
+          />
 
           {/* Controls */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

@@ -23,9 +23,18 @@ model User {
   totalCoins  Int         @default(0)
   createdAt   DateTime    @default(now())
 
-  tasks         Task[]
-  userSkills    UserSkill[]
-  focusSessions FocusSession[]
+  tasks           Task[]
+  userSkills      UserSkill[]
+  focusSessions   FocusSession[]
+  expenses        Expense[]
+  incomes         Income[]
+  budgets         Budget[]
+  financialGoals  FinancialGoal[]
+  subscriptions   Subscription[]
+  habits          Habit[]
+  workouts        Workout[]
+  workoutSessions WorkoutSession[]
+  bodyStats       BodyStat[]
 }
 
 model Task {
@@ -78,6 +87,7 @@ model Skill {
 
   taskSkills TaskSkill[]
   userSkills UserSkill[]
+  habits     Habit[]
 }
 
 model UserSkill {
@@ -116,4 +126,178 @@ model FocusSession {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+// ── Personal Finance ──────────────────────────────────
+
+model Expense {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  amount    Float
+  category  String   @default("Other")
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Income {
+  id        String   @id @default(cuid())
+  userId    String
+  source    String
+  amount    Float
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Budget {
+  id       String @id @default(cuid())
+  userId   String
+  category String
+  limit    Float
+  month    Int
+  year     Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, month, year])
+}
+
+model FinancialGoal {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  targetAmount  Float
+  currentAmount Float    @default(0)
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String
+  serviceName     String
+  amount          Float
+  billingCycle    String   @default("monthly")
+  nextPaymentDate DateTime
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Habit Tracking ────────────────────────────────────
+
+enum HabitDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Habit {
+  id            String          @id @default(cuid())
+  userId        String
+  title         String
+  category      String          @default("General")
+  skillId       String?
+  difficulty    HabitDifficulty @default(MEDIUM)
+  currentStreak Int             @default(0)
+  bestStreak    Int             @default(0)
+  createdAt     DateTime        @default(now())
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill       Skill?            @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  completions HabitCompletion[]
+}
+
+model HabitCompletion {
+  id      String   @id @default(cuid())
+  habitId String
+  date    DateTime // UTC midnight for the day
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+}
+
+// ── Gym / Fitness ──────────────────────────────────────
+
+model GymExercise {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  muscleGroup String
+  description String?
+
+  workoutExercises WorkoutExercise[]
+  sessionSets      SessionSet[]
+}
+
+model Workout {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  dayOfWeek String?  // "Monday", "Tuesday", etc.
+  createdAt DateTime @default(now())
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
+  sessions  WorkoutSession[]
+}
+
+model WorkoutExercise {
+  id         String @id @default(cuid())
+  workoutId  String
+  exerciseId String
+  sets       Int    @default(3)
+  reps       Int    @default(10)
+  weight     Float?
+  order      Int    @default(0)
+
+  workout  Workout     @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise GymExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([workoutId, exerciseId])
+}
+
+model WorkoutSession {
+  id          String   @id @default(cuid())
+  userId      String
+  workoutId   String?
+  date        DateTime @default(now())
+  completed   Boolean  @default(false)
+  durationMin Int?
+  notes       String?
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout Workout?      @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  sets    SessionSet[]
+}
+
+model SessionSet {
+  id         String  @id @default(cuid())
+  sessionId  String
+  exerciseId String
+  setNumber  Int
+  reps       Int?
+  weight     Float?
+  completed  Boolean @default(false)
+
+  session  WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise GymExercise    @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+}
+
+model BodyStat {
+  id        String   @id @default(cuid())
+  userId    String
+  weight    Float?
+  bodyFat   Float?
+  chest     Float?
+  arms      Float?
+  waist     Float?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
