@@ -16,23 +16,31 @@ const { errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
 
-// CORS — allowed origins (local dev + production frontend)
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
+// CORS — allowed origins
+// • Any http://localhost:* port is allowed (Vite dev server can use 5173, 5174, 5175, …)
+// • Explicit production domains are whitelisted by exact match
+const PRODUCTION_ORIGINS = [
   'https://action-psi-opal.vercel.app',
-  // Any extra origin set via env (e.g. a preview deploy URL)
   ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow server-to-server requests (no Origin header) and whitelisted browsers
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: origin '${origin}' is not allowed`));
+      // No Origin header = server-to-server / curl / Postman — allow
+      if (!origin) return callback(null, true);
+
+      // Any localhost port — allow (covers 5173, 5174, 5175, etc.)
+      if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+        return callback(null, true);
       }
+
+      // Explicit production whitelist — allow
+      if (PRODUCTION_ORIGINS.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error(`CORS: origin '${origin}' is not allowed`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
