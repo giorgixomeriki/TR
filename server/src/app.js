@@ -9,15 +9,34 @@ const subtaskRoutes    = require('./routes/subtask.routes');
 const aiRoutes         = require('./routes/ai.routes');
 const skillRoutes      = require('./routes/skill.routes');
 const focusRoutes      = require('./routes/focus.routes');
+const financeRoutes    = require('./routes/finance.routes');
+const habitRoutes      = require('./routes/habit.routes');
+const gymRoutes        = require('./routes/gym.routes');
 const { errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
 
-// CORS — allow frontend origin
+// CORS — allowed origins (local dev + production frontend)
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'https://action-psi-opal.vercel.app',
+  // Any extra origin set via env (e.g. a preview deploy URL)
+  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow server-to-server requests (no Origin header) and whitelisted browsers
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' is not allowed`));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
@@ -41,7 +60,10 @@ app.use('/api',       attachmentRoutes);
 app.use('/api',       subtaskRoutes);
 app.use('/api/ai',    aiRoutes);
 app.use('/api/skills', skillRoutes);
-app.use('/api/focus',  focusRoutes);
+app.use('/api/focus',   focusRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/habits',  habitRoutes);
+app.use('/api/gym',     gymRoutes);
 
 // 404 handler for unknown routes
 app.use((req, res) => {
